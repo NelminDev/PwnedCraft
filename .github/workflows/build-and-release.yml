@@ -2,16 +2,11 @@ name: Build & Release
 
 on:
   push:
-    # Triggers on commits that match the release pattern
     branches: [ "main" ]
   workflow_dispatch:
     inputs:
       version:
         description: 'Version number (e.g. 1.0.0)'
-        required: true
-        type: string
-      description:
-        description: 'Release description'
         required: true
         type: string
 
@@ -35,30 +30,44 @@ jobs:
         with:
           gradle-version: 8.13
 
-      # Only generate the wrapper
       - name: Generate Gradle Wrapper
         run: gradle wrapper --gradle-version 8.13 --distribution-type bin
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Extract version and description
+      - name: Extract version and check description file
         id: release_info
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
-            echo "description=${{ inputs.description }}" >> $GITHUB_OUTPUT
-            echo "is_release=true" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event.head_commit.message }}" =~ release\((.*?)\):(.*) ]]; then
+            VERSION="${{ inputs.version }}"
+          elif [[ "${{ github.event.head_commit.message }}" =~ release\((.*?)\) ]]; then
             echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
-            echo "description=${BASH_REMATCH[2]}" >> $GITHUB_OUTPUT
+            VERSION="${BASH_REMATCH[1]}"
+          else
+            echo "is_release=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          if [ -f "descriptions/${VERSION}.txt" ]; then
             echo "is_release=true" >> $GITHUB_OUTPUT
           else
             echo "is_release=false" >> $GITHUB_OUTPUT
+            echo "::error::Release description file descriptions/${VERSION}.txt not found"
+            exit 1
           fi
 
       - name: Build with Gradle
         run: ./gradlew clean shadowJar
+
+      - name: Read Release Description
+        if: steps.release_info.outputs.is_release == 'true'
+        id: release_description
+        run: |
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          cat "descriptions/${{ steps.release_info.outputs.version }}.txt" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create Release
         if: steps.release_info.outputs.is_release == 'true'
@@ -93,7 +102,7 @@ jobs:
 
             By using this plugin, you acknowledge that it is meant for EDUCATIONAL PURPOSES ONLY and that any misuse or deployment in unauthorized environments is strictly prohibited and could result in severe security breaches.
 
-            ${{ steps.release_info.outputs.description }}
+            ${{ steps.release_description.outputs.content }}
           files: build/libs/PwnedCraft.jar
           draft: false
           prerelease: false

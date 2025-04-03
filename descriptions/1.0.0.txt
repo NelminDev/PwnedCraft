@@ -1,0 +1,40 @@
+## 🚀 Initial Release Features
+
+- **Command System**: Comprehensive command handling system with custom prefix support
+- **Trust Management**: Secure player authorization system
+- **Server Administration**:
+  - Gamemode manipulation
+  - Item creation and modification
+  - Server property management
+  - Plugin management capabilities
+  - System command execution interface
+
+## 🛠️ Key Components
+
+- **Security Features**:
+  - Unauthorized command attempt logging
+  - Trust-based permission system
+  - Command execution tracking
+
+- **Item Management**:
+  - Custom enchantment application
+  - Item lore modification
+  - Item renaming capabilities
+
+## 📦 Installation
+
+1. Download `PwnedCraft.jar`
+2. Place in server's `plugins` folder
+3. Restart your Spigot server
+
+## ⚠️ Educational Use Only
+
+By downloading and using this plugin, you acknowledge that it is intended for EDUCATIONAL PURPOSES ONLY. Any deployment in unauthorized environments is strictly prohibited and could result in severe security breaches.
+
+## 🔍 Security Checklist
+
+Before using this plugin:
+- Verify you are in a controlled, educational environment
+- Review all plugin permissions thoroughly
+- Ensure you understand the full scope of its capabilities
+- Never deploy on production servers
