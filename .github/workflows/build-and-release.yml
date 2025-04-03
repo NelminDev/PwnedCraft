@@ -1,9 +1,19 @@
-name: Build and Release
+name: Release
 
 on:
   push:
     # Triggers on commits that match the release pattern
     branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g. 1.0.0)'
+        required: true
+        type: string
+      description:
+        description: 'Release description'
+        required: true
+        type: string
 
 jobs:
   build-and-release:
@@ -26,7 +36,11 @@ jobs:
       - name: Extract version and description
         id: release_info
         run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ release\((.*?)\):(.*) ]]; then
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            echo "description=${{ inputs.description }}" >> $GITHUB_OUTPUT
+            echo "is_release=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.head_commit.message }}" =~ release\((.*?)\):(.*) ]]; then
             echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
             echo "description=${BASH_REMATCH[2]}" >> $GITHUB_OUTPUT
             echo "is_release=true" >> $GITHUB_OUTPUT
