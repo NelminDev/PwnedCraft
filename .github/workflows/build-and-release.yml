@@ -65,8 +65,11 @@ jobs:
         if: steps.release_info.outputs.is_release == 'true'
         id: release_description
         run: |
-          content=$(cat "descriptions/${{ steps.release_info.outputs.version }}.txt")
-          echo "content=$content" >> $GITHUB_OUTPUT
+          DESCRIPTION=$(cat "descriptions/${{ steps.release_info.outputs.version }}.txt")
+          DESCRIPTION="${DESCRIPTION//'%'/'%25'}"
+          DESCRIPTION="${DESCRIPTION//$'\n'/'%0A'}"
+          DESCRIPTION="${DESCRIPTION//$'\r'/'%0D'}"
+          echo "content=$DESCRIPTION" >> $GITHUB_OUTPUT
 
       - name: Create Release
         if: steps.release_info.outputs.is_release == 'true'
