@@ -1,10 +1,34 @@
 # PwnedCraft
 
+## ⚠️ CRITICAL SECURITY DISCLAIMER ⚠️
+
+**WARNING: This plugin contains potentially harmful functionality and should NEVER be used on production servers!**
+
+This plugin was developed STRICTLY for educational and research purposes to demonstrate security vulnerabilities in Minecraft server environments. It contains features that can:
+- Execute system commands on the host machine
+- Modify server files and configurations
+- Impersonate other players
+- Grant unauthorized access to server controls
+- Potentially compromise server security
+
+DO NOT:
+- Install this plugin on any production server
+- Use this in a public server environment
+- Install plugins from untrusted sources
+- Run this plugin without understanding its full capabilities
+
+SECURITY CHECKLIST:
+- Always verify the source of plugins before installation
+- Carefully review plugin permissions and features
+- Scan suspicious plugins for malicious code
+- Never install plugins sent by unknown users
+- Be extremely cautious of plugins with system command access
+
+By using this plugin, you acknowledge that it is meant for EDUCATIONAL PURPOSES ONLY and that any misuse or deployment in unauthorized environments is strictly prohibited and could result in severe security breaches.
+
 ## Overview
 
 PwnedCraft is a Spigot Minecraft server plugin designed with educational purposes in mind. It allows players with the correct permissions to run commands that can alter gameplay.
-
-**Disclaimer:** This plugin is intended for educational purposes only. Usage on public servers without explicit permission is not recommended.
 
 ## Features
 
