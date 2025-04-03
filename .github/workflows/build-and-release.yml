@@ -91,8 +91,6 @@ jobs:
             echo
             echo "By using this plugin, you acknowledge that it is meant for EDUCATIONAL PURPOSES ONLY and that any misuse or deployment in unauthorized environments is strictly prohibited and could result in severe security breaches."
             echo
-            echo "## Release Notes"
-            echo
             cat "descriptions/${{ steps.release_info.outputs.version }}.txt"
           } > release_notes.md
 
