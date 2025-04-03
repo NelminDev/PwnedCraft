@@ -101,6 +101,17 @@ jobs:
           cp public-gpg-key.asc release_files/
           cp build/libs/PwnedCraft.* release_files/
 
+      - name: Extract Version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            # Extract version from commit message that starts with "release("
+            VERSION=$(echo "${{ github.event.head_commit.message }}" | grep -oP 'release\(\K[^)]+')
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          fi
+
       - name: Prepare Release Notes
         run: |
           {
@@ -130,7 +141,7 @@ jobs:
             echo
             echo "By using this plugin, you acknowledge that it is meant for EDUCATIONAL PURPOSES ONLY and that any misuse or deployment in unauthorized environments is strictly prohibited and could result in severe security breaches."
             echo
-            cat "descriptions/${{ steps.release_info.outputs.version }}.txt"
+            cat "descriptions/${{ steps.version.outputs.version }}.txt"
           } > release_notes.md
 
       - name: Create Release
