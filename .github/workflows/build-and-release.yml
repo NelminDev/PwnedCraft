@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - main
-    tags:
-      - "release(*)"
+
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
   build:
@@ -28,8 +28,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          tag_name: ${{ github.sha }}
+          release_name: Release - ${{ github.sha }}
+          body: ${{ github.event.head_commit.message }}
           file_glob: true
           draft: false
           prerelease: false
