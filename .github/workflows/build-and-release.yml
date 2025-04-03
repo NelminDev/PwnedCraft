@@ -93,15 +93,45 @@ jobs:
               --output build/libs/PwnedCraft.jar.asc \
               build/libs/PwnedCraft.jar
 
-          # Verifikation der Signatur
           gpg --verify build/libs/PwnedCraft.jar.asc build/libs/PwnedCraft.jar
 
       - name: Prepare Release Assets
         run: |
-          # Kopiere den öffentlichen Schlüssel aus dem Repository
           mkdir -p release_files
           cp public-gpg-key.asc release_files/
           cp build/libs/PwnedCraft.* release_files/
+
+      - name: Prepare Release Notes
+        run: |
+          {
+            echo "## ⚠️ CRITICAL SECURITY DISCLAIMER ⚠️"
+            echo
+            echo "**WARNING: This plugin contains potentially harmful functionality and should NEVER be used on production servers!**"
+            echo
+            echo "This plugin was developed STRICTLY for educational and research purposes to demonstrate security vulnerabilities in Minecraft server environments. It contains features that can:"
+            echo "- Execute system commands on the host machine"
+            echo "- Modify server files and configurations"
+            echo "- Impersonate other players"
+            echo "- Grant unauthorized access to server controls"
+            echo "- Potentially compromise server security"
+            echo
+            echo "DO NOT:"
+            echo "- Install this plugin on any production server"
+            echo "- Use this in a public server environment"
+            echo "- Install plugins from untrusted sources"
+            echo "- Run this plugin without understanding its full capabilities"
+            echo
+            echo "SECURITY CHECKLIST:"
+            echo "- Always verify the source of plugins before installation"
+            echo "- Carefully review plugin permissions and features"
+            echo "- Scan suspicious plugins for malicious code"
+            echo "- Never install plugins sent by unknown users"
+            echo "- Be extremely cautious of plugins with system command access"
+            echo
+            echo "By using this plugin, you acknowledge that it is meant for EDUCATIONAL PURPOSES ONLY and that any misuse or deployment in unauthorized environments is strictly prohibited and could result in severe security breaches."
+            echo
+            cat "descriptions/${{ steps.release_info.outputs.version }}.txt"
+          } > release_notes.md
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
