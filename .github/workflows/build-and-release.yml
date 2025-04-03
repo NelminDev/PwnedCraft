@@ -30,11 +30,15 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Setup Gradle and Generate Wrapper
+      - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: 8.5
-          generate-wrapper: true
+          gradle-version: 8.13
+
+      - name: Generate Gradle Wrapper
+        run: |
+          gradle init --type basic --dsl kotlin --no-incubating
+          gradle wrapper --gradle-version 8.13
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
