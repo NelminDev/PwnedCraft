@@ -6,13 +6,12 @@ import org.bukkit.entity.Player
 import java.io.File
 
 /**
- * The `SystemCommand` class handles system-like commands issued by a player in the context of the game.
- * It provides functionality to perform operations such as file creation, directory navigation, file removal,
- * and retrieving system information.
+ * Represents a system command handler in the PwnedCraft plugin. This class processes and executes
+ * commands issued by a player related to virtual file system operations and system details.
  *
- * @property sender The player who issued the command.
- * @property args The array of arguments passed with the command.
- * @property pwnedCraft The instance of the PwnedCraft application used for handling system paths and context.
+ * @property sender The player who triggered the command.
+ * @property args The arguments provided by the player.
+ * @property pwnedCraft An instance of the PwnedCraft plugin.
  */
 class SystemCommand(
     private val sender: Player,
@@ -24,12 +23,15 @@ class SystemCommand(
     }
 
     /**
-     * Processes the system command by evaluating the provided arguments and executing the appropriate action.
+     * Processes the incoming command by determining its validity and type.
      *
-     * If no arguments are provided, it invokes `showSyntax()` to display the available syntax.
-     * Otherwise, it delegates the command handling to `handleCommand()`.
+     * If no arguments are provided, the syntax information for the
+     * system commands is displayed by invoking `showSyntax`. Otherwise, it
+     * delegates the handling of the command to `handleCommand`.
      *
-     * This method is a central entry point for parsing and dispatching system commands based on user input.
+     * The command structure and its behavior depend on the arguments
+     * passed by the user, and the appropriate logic to process the
+     * command is handled separately.
      */
     private fun processCommand() {
         when {
@@ -39,26 +41,21 @@ class SystemCommand(
     }
 
     /**
-     * Handles the execution of commands based on the first argument provided in the `args` list.
+     * Handles the execution of various commands based on the provided arguments.
+     * The commands include operations such as retrieving OS information, managing
+     * directories, creating files or directories, and interacting with files.
      *
-     * This method serves as a dispatcher, interpreting the first argument to determine which
-     * sub-command processing method to invoke. Each sub-command performs a specific functionality.
+     * Command overview:
+     * - "os": Retrieves and displays the current operating system name.
+     * - "usr": Retrieves and displays the current system username.
+     * - "ls": Lists the contents of a specified directory.
+     * - "goto": Changes the current directory to the specified path.
+     * - "rm" or "remove": Removes a file or directory, with an optional force parameter.
+     * - "mk": Creates a file or directory based on the specified type.
+     * - "write": Prepares a specified file for writing.
+     * - "kv": Writes a key-value pair to a specified file.
      *
-     * Commands supported:
-     * - "os": Invokes `handleOS()` to display the current operating system.
-     * - "usr": Invokes `handleGetCurrentUser()` to display the current system's username.
-     * - "ls": Invokes `handleListContent(path)` to list the contents of a directory. Defaults to the current directory if no path is provided.
-     * - "goto": Invokes `handleGoTo(path)` to navigate to a specified directory. Warns if the required argument is missing.
-     * - "rm" or "remove": Invokes `handleRemove(path, force)` to remove a file or directory. Warns if the required argument is missing.
-     * - "mk": Invokes `handleMake(type, path)` to create a new file or directory. Warns if the required arguments are missing.
-     * - "write": Invokes `handleWriteToFile(path)` to prepare a file for writing. Warns if the required argument is missing.
-     * - "kv": Invokes `handleKeyValueWriteToFile(path, key, value)` to write a key-value pair to a file. Warns if the required arguments are missing.
-     * - Any other command: Calls `showSyntax()` for guidance on command usage.
-     *
-     * Error handling:
-     * - For commands requiring arguments, the method will send an appropriate message if arguments are missing or invalid.
-     *
-     * Delegates execution to respective private methods depending on the functionality needed.
+     * If an unrecognized command is provided, the command syntax/usage is displayed to guide the user.
      */
     private fun handleCommand() {
         when (args[0].lowercase()) {
@@ -109,10 +106,10 @@ class SystemCommand(
     }
 
     /**
-     * Retrieves the current directory associated with the sender if available.
-     * If no directory is found, returns the default directory ".".
+     * Retrieves the current directory associated with the sender's unique ID.
      *
-     * @return The current directory associated with the sender or "." if no directory is found.
+     * @return The current directory as a String if the sender's unique ID is found in the mappings;
+     *         returns "." if no matching directory is found.
      */
     private fun getCurrentDirectory(): String {
         return pwnedCraft.gotoDirsToPlayers
@@ -122,12 +119,10 @@ class SystemCommand(
     }
 
     /**
-     * Handles the process of navigating to a specified directory path by the user.
-     * The method resolves the given path, validates it, updates the current directory
-     * associated with the user, and notifies the user of the changes.
+     * Handles changing the current directory context for the user. Resolves the given path and validates
+     * it as a directory. Adjusts user tracking for the directory change to reflect the new target path.
      *
-     * @param path the directory path the user wishes to navigate to. Can be relative
-     * or absolute, and supports Unix-like (`.` and `..`) as well as Windows-style paths.
+     * @param path The path to navigate to. Can be relative (e.g., `./`, `../`), absolute, or special (e.g., `.`, `..`).
      */
     private fun handleGoTo(path: String) {
         val targetPath = when {
@@ -177,13 +172,10 @@ class SystemCommand(
     }
 
     /**
-     * Resolves the given file path into its absolute or normalized form based on the current directory context.
+     * Resolves a given file path to its absolute or normalized form based on the current directory.
      *
-     * The method handles both absolute and relative paths, supporting adjustments for Windows-style paths
-     * and ensuring consistency in path separators.
-     *
-     * @param path the input path to resolve, which can be absolute or relative
-     * @return the resolved and normalized file path as a String
+     * @param path The path to resolve. It can be an absolute path, relative path, or path with notations like `./` or `../`.
+     * @return The resolved and normalized path using forward slashes as the separator.
      */
     private fun resolvePath(path: String): String {
         // Check if it's an absolute Windows path
@@ -206,8 +198,11 @@ class SystemCommand(
     }
 
     /**
-     * Determines the current operating system using the system property "os.name"
-     * and sends a message with the operating system information.
+     * Retrieves the name of the current operating system using the system property "os.name"
+     * and sends it as a message.
+     *
+     * This method interfaces with the system's environment to fetch the OS information and
+     * uses the `sendMessage` function to output the required data.
      */
     private fun handleOS() {
         val osName = System.getProperty("os.name")
@@ -215,11 +210,11 @@ class SystemCommand(
     }
 
     /**
-     * Handles the retrieval of the current system username and sends it as a message.
+     * Retrieves the current system username and sends it as a message.
      *
-     * This function utilizes the Java `System.getProperty` API to fetch the "user.name" property,
-     * which typically corresponds to the username of the current operating system user. The retrieved
-     * username is then sent as a message using the `sendMessage` method.
+     * This method uses the `user.name` system property to obtain the username
+     * of the active system user and utilizes the `sendMessage` function to
+     * display the retrieved username.
      */
     private fun handleGetCurrentUser() {
         val username = System.getProperty("user.name")
@@ -227,11 +222,11 @@ class SystemCommand(
     }
 
     /**
-     * Handles the listing of directory content for the specified path.
-     * Checks if the given path exists and is a directory, then retrieves and categorizes its content into files and directories.
-     * Sends messages displaying the contents or appropriate error messages.
+     * Handles listing the content of a directory specified by the provided path.
+     * Verifies the input path, checks its existence and type, and then displays
+     * the directory's content, listing directories and files separately.
      *
-     * @param path The file path to the directory whose content needs to be listed, either absolute or relative.
+     * @param path The path to the directory whose contents should be listed.
      */
     private fun handleListContent(path: String) {
         val fullPath = resolvePath(path)
@@ -274,11 +269,11 @@ class SystemCommand(
     }
 
     /**
-     * Handles the removal of a file or directory at the specified path. If the path points to a directory
-     * that is not empty, the `force` flag must be set to true to delete it.
+     * Handles the removal of a file or directory at the specified path.
      *
-     * @param path The relative or absolute path of the file or directory to remove.
-     * @param force If true, forces the removal of non-empty directories.
+     * @param path The file or directory path to be removed. This can be an absolute or relative path.
+     * @param force If true, allows the deletion of non-empty directories. If false, the method prevents
+     *              deletion of non-empty directories.
      */
     private fun handleRemove(path: String, force: Boolean) {
         val fullPath = resolvePath(path)
@@ -308,13 +303,12 @@ class SystemCommand(
     }
 
     /**
-     * Handles the creation of a file or directory based on the provided type and path.
-     * Valid types are "file" and "dir".
+     * Handles the creation of a file or directory at the specified path.
+     * Validates the input, checks if the path already exists, and attempts to create
+     * the specified type (either "file" or "dir"). Reports success or failure via messages.
      *
-     * @param type Specifies whether to create a file ("file") or a directory ("dir").
-     *             If null or invalid, an error message is sent.
-     * @param path The relative or absolute path of the file or directory to be created.
-     *             If null or invalid, an error message is sent.
+     * @param type The type of item to create. Must be either "file" or "dir" (case-insensitive).
+     * @param path The file system path where the item should be created. Must not be null or blank.
      */
     private fun handleMake(type: String?, path: String?) {
         if (type.isNullOrBlank() || path.isNullOrBlank() || type.lowercase() !in listOf("file", "dir")) {
@@ -347,11 +341,9 @@ class SystemCommand(
     }
 
     /**
-     * Handles the process of writing to a file by verifying if the file exists
-     * at the provided path and preparing it for writing. Sends a message to indicate
-     * whether the file is ready for writing or does not exist.
+     * Handles the process of verifying if a file exists and preparing it for writing.
      *
-     * @param path The path to the file that needs to be checked and prepared for writing.
+     * @param path The path to the file that needs to be checked for existence and prepared for writing.
      */
     private fun handleWriteToFile(path: String) {
         val fullPath = resolvePath(path)
@@ -366,11 +358,12 @@ class SystemCommand(
     }
 
     /**
-     * Updates or adds a key-value pair in a specified file. If the key already exists in the file, its value is updated.
-     * If the key does not exist, it appends the new key-value pair to the file. The file must exist in the specified path.
+     * Writes or updates a key-value pair in a text file, with each pair formatted as "key=value".
+     * If the key already exists in the file, its value is updated. If the key does not exist, a new
+     * key-value pair is appended to the file.
      *
-     * @param path The relative or absolute file path where the key-value operation is performed.
-     * @param key The key of the key-value pair to be written or updated in the file.
+     * @param path The relative or absolute path to the file where the key-value pair should be written.
+     * @param key The key to be written or updated in the file.
      * @param value The value associated with the key to be written or updated in the file.
      */
     private fun handleKeyValueWriteToFile(path: String, key: String, value: String) {
@@ -402,18 +395,19 @@ class SystemCommand(
     }
 
     /**
-     * Displays the command syntax for the `system` command to the sender.
-     * The syntax includes detailed instructions for various sub-commands such as:
-     * - Showing the operating system.
-     * - Displaying the current user's username.
-     * - Listing directory contents.
-     * - Navigating to a directory.
-     * - Removing files or directories.
-     * - Creating files or directories.
-     * - Writing to files.
-     * - Adding or updating key-value pairs in files.
+     * Displays the syntax guide for various system-related commands available in the application.
      *
-     * The displayed syntax provides a comprehensive guide to users for utilizing the `system` commands effectively.
+     * The commands shown include:
+     * - Retrieving the operating system of the server.
+     * - Viewing the current user's username.
+     * - Listing the contents of a specified directory.
+     * - Navigating to a specific directory.
+     * - Removing files or directories, with an optional "force" mode.
+     * - Creating new files or directories.
+     * - Writing data to a file.
+     * - Manipulating key-value pairs in a specified file.
+     *
+     * The output is formatted and sent to the user through the provided `sender` instance.
      */
     private fun showSyntax() {
         TextBuilder("""
@@ -431,10 +425,11 @@ class SystemCommand(
     }
 
     /**
-     * Sends a message to the command sender, optionally adding a prefix on a new line.
+     * Sends a formatted message to the designated sender with an optional prefix placement.
      *
-     * @param message The message to be sent to the sender.
-     * @param prefixOnNewLine Determines whether the prefix should be added on a new line. Defaults to true.
+     * @param message The content of the message to be sent.
+     * @param prefixOnNewLine Determines whether the prefix should be placed on a new line.
+     * Defaults to true.
      */
     private fun sendMessage(message: String, prefixOnNewLine: Boolean = true) {
         TextBuilder(message).prefix().sendTo(sender, prefixOnNewLine = prefixOnNewLine)
