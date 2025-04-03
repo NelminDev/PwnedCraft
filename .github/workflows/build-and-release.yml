@@ -11,10 +11,10 @@ on:
         type: string
 
 jobs:
-  build-and-release:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    outputs:
+      jar_hash: ${{ steps.hash_calculation.outputs.hash }}
 
     steps:
       - uses: actions/checkout@v4
@@ -30,77 +30,85 @@ jobs:
         with:
           gradle-version: 8.13
 
-      - name: Generate Gradle Wrapper
-        run: gradle wrapper --gradle-version 8.13 --distribution-type bin
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Extract version and check description file
-        id: release_info
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
-            VERSION="${{ inputs.version }}"
-          elif [[ "${{ github.event.head_commit.message }}" =~ release\((.*?)\) ]]; then
-            echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
-            VERSION="${BASH_REMATCH[1]}"
-          else
-            echo "is_release=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          if [ -f "descriptions/${VERSION}.txt" ]; then
-            echo "is_release=true" >> $GITHUB_OUTPUT
-          else
-            echo "is_release=false" >> $GITHUB_OUTPUT
-            echo "::error::Release description file descriptions/${VERSION}.txt not found"
-            exit 1
-          fi
-
       - name: Build with Gradle
         run: ./gradlew clean shadowJar
 
-      - name: Prepare Release Notes
-        if: steps.release_info.outputs.is_release == 'true'
+      - name: Generate checksum
+        id: hash_calculation
         run: |
-          {
-            echo "## ⚠️ CRITICAL SECURITY DISCLAIMER ⚠️"
-            echo
-            echo "**WARNING: This plugin contains potentially harmful functionality and should NEVER be used on production servers!**"
-            echo
-            echo "This plugin was developed STRICTLY for educational and research purposes to demonstrate security vulnerabilities in Minecraft server environments. It contains features that can:"
-            echo "- Execute system commands on the host machine"
-            echo "- Modify server files and configurations"
-            echo "- Impersonate other players"
-            echo "- Grant unauthorized access to server controls"
-            echo "- Potentially compromise server security"
-            echo
-            echo "DO NOT:"
-            echo "- Install this plugin on any production server"
-            echo "- Use this in a public server environment"
-            echo "- Install plugins from untrusted sources"
-            echo "- Run this plugin without understanding its full capabilities"
-            echo
-            echo "SECURITY CHECKLIST:"
-            echo "- Always verify the source of plugins before installation"
-            echo "- Carefully review plugin permissions and features"
-            echo "- Scan suspicious plugins for malicious code"
-            echo "- Never install plugins sent by unknown users"
-            echo "- Be extremely cautious of plugins with system command access"
-            echo
-            echo "By using this plugin, you acknowledge that it is meant for EDUCATIONAL PURPOSES ONLY and that any misuse or deployment in unauthorized environments is strictly prohibited and could result in severe security breaches."
-            echo
-            cat "descriptions/${{ steps.release_info.outputs.version }}.txt"
-          } > release_notes.md
+          SHA=$(sha256sum build/libs/PwnedCraft.jar | cut -d ' ' -f 1)
+          echo "hash=$SHA" >> $GITHUB_OUTPUT
+          echo "$SHA" > build/libs/PwnedCraft.jar.sha256
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PwnedCraft-${{ github.run_id }}
+          path: |
+            build/libs/PwnedCraft.jar
+            build/libs/PwnedCraft.jar.sha256
+
+  release:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'release(')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download built artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: PwnedCraft-${{ github.run_id }}
+          path: build/libs
+
+      - name: Validate checksum
+        run: |
+          cd build/libs
+          echo "$(cat PwnedCraft.jar.sha256)  PwnedCraft.jar" | sha256sum -c
+
+      - name: Import GPG Key
+        id: import_gpg
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" > private.asc
+          gpg --batch --pinentry-mode loopback --passphrase "$PASSPHRASE" --import private.asc
+          echo "fingerprint=$(gpg --fingerprint --with-colons ${{ secrets.GPG_KEY_ID }} | awk -F: '$1 == "fpr" {print $10;exit}')" >> $GITHUB_OUTPUT
+          rm private.asc
+
+      - name: Sign JAR
+        run: |
+          gpg --batch --pinentry-mode loopback \
+              --passphrase "${{ secrets.GPG_PASSPHRASE }}" \
+              --detach-sign --armor \
+              --local-user ${{ secrets.GPG_KEY_ID }} \
+              --output build/libs/PwnedCraft.jar.asc \
+              build/libs/PwnedCraft.jar
+
+          # Verifikation der Signatur
+          gpg --verify build/libs/PwnedCraft.jar.asc build/libs/PwnedCraft.jar
+
+      - name: Prepare Release Assets
+        run: |
+          # Kopiere den öffentlichen Schlüssel aus dem Repository
+          mkdir -p release_files
+          cp public-gpg-key.asc release_files/
+          cp build/libs/PwnedCraft.* release_files/
 
       - name: Create Release
-        if: steps.release_info.outputs.is_release == 'true'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.release_info.outputs.version }}
           name: Release v${{ steps.release_info.outputs.version }}
           body_path: release_notes.md
-          files: build/libs/PwnedCraft.jar
+          files: |
+            release_files/PwnedCraft.jar
+            release_files/PwnedCraft.jar.asc
+            release_files/public-gpg-key.asc
           draft: false
           prerelease: false
