@@ -1,0 +1,7 @@
+name: PwnedCraft
+version: '1.0'
+main: dev.nelmin.minecraft.PwnedCraft
+api-version: '1.21'
+authors: [ Nelmin ]
+description: A Plugin to "hack" on Spigot based Servers. !! FOR EDUCATIONAL PURPOSES ONLY !!
+website: https://nelmin.dev/projects/minecraft/pwnedcraft
