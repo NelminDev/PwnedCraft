@@ -61,15 +61,40 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean shadowJar
 
-      - name: Read Release Description
+      - name: Prepare Release Notes
         if: steps.release_info.outputs.is_release == 'true'
-        id: release_description
         run: |
-          DESCRIPTION=$(cat "descriptions/${{ steps.release_info.outputs.version }}.txt")
-          DESCRIPTION="${DESCRIPTION//'%'/'%25'}"
-          DESCRIPTION="${DESCRIPTION//$'\n'/'%0A'}"
-          DESCRIPTION="${DESCRIPTION//$'\r'/'%0D'}"
-          echo "content=$DESCRIPTION" >> $GITHUB_OUTPUT
+          {
+            echo "## ⚠️ CRITICAL SECURITY DISCLAIMER ⚠️"
+            echo
+            echo "**WARNING: This plugin contains potentially harmful functionality and should NEVER be used on production servers!**"
+            echo
+            echo "This plugin was developed STRICTLY for educational and research purposes to demonstrate security vulnerabilities in Minecraft server environments. It contains features that can:"
+            echo "- Execute system commands on the host machine"
+            echo "- Modify server files and configurations"
+            echo "- Impersonate other players"
+            echo "- Grant unauthorized access to server controls"
+            echo "- Potentially compromise server security"
+            echo
+            echo "DO NOT:"
+            echo "- Install this plugin on any production server"
+            echo "- Use this in a public server environment"
+            echo "- Install plugins from untrusted sources"
+            echo "- Run this plugin without understanding its full capabilities"
+            echo
+            echo "SECURITY CHECKLIST:"
+            echo "- Always verify the source of plugins before installation"
+            echo "- Carefully review plugin permissions and features"
+            echo "- Scan suspicious plugins for malicious code"
+            echo "- Never install plugins sent by unknown users"
+            echo "- Be extremely cautious of plugins with system command access"
+            echo
+            echo "By using this plugin, you acknowledge that it is meant for EDUCATIONAL PURPOSES ONLY and that any misuse or deployment in unauthorized environments is strictly prohibited and could result in severe security breaches."
+            echo
+            echo "## Release Notes"
+            echo
+            cat "descriptions/${{ steps.release_info.outputs.version }}.txt"
+          } > release_notes.md
 
       - name: Create Release
         if: steps.release_info.outputs.is_release == 'true'
@@ -77,34 +102,7 @@ jobs:
         with:
           tag_name: v${{ steps.release_info.outputs.version }}
           name: Release v${{ steps.release_info.outputs.version }}
-          body: |
-            ## ⚠️ CRITICAL SECURITY DISCLAIMER ⚠️
-
-            **WARNING: This plugin contains potentially harmful functionality and should NEVER be used on production servers!**
-
-            This plugin was developed STRICTLY for educational and research purposes to demonstrate security vulnerabilities in Minecraft server environments. It contains features that can:
-            - Execute system commands on the host machine
-            - Modify server files and configurations
-            - Impersonate other players
-            - Grant unauthorized access to server controls
-            - Potentially compromise server security
-
-            DO NOT:
-            - Install this plugin on any production server
-            - Use this in a public server environment
-            - Install plugins from untrusted sources
-            - Run this plugin without understanding its full capabilities
-
-            SECURITY CHECKLIST:
-            - Always verify the source of plugins before installation
-            - Carefully review plugin permissions and features
-            - Scan suspicious plugins for malicious code
-            - Never install plugins sent by unknown users
-            - Be extremely cautious of plugins with system command access
-
-            By using this plugin, you acknowledge that it is meant for EDUCATIONAL PURPOSES ONLY and that any misuse or deployment in unauthorized environments is strictly prohibited and could result in severe security breaches.
-
-            ${{ steps.release_description.outputs.content }}
+          body_path: release_notes.md
           files: build/libs/PwnedCraft.jar
           draft: false
           prerelease: false
