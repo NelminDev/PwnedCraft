@@ -147,8 +147,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.release_info.outputs.version }}
-          name: Release v${{ steps.release_info.outputs.version }}
+          tag_name: v${{ steps.version.outputs.version }}
+          name: 🎮 PwnedCraft v${{ steps.version.outputs.version }}
           body_path: release_notes.md
           files: |
             release_files/PwnedCraft.jar
