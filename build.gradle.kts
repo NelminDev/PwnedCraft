@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "dev.nelmin.minecraft"
-version = "1.0"
+version = project.property("project.version").toString()
 
 repositories {
     mavenCentral()

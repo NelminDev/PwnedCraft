@@ -107,8 +107,8 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
           else
-            # Extract version from commit message that starts with "release("
-            VERSION=$(echo "${{ github.event.head_commit.message }}" | grep -oP 'release\(\K[^)]+')
+            # Get version from gradle.properties
+            VERSION=$(grep "project.version" gradle.properties | cut -d'=' -f2)
             echo "version=$VERSION" >> $GITHUB_OUTPUT
           fi
 
